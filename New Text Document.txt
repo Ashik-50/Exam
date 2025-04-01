@@ -1,0 +1,271 @@
+1.a) GSM Module
+#include <SoftwareSerial.h>
+SoftwareSerial sim(10, 11);
+void setup() {
+  Serial.begin(9600);
+  sim.begin(9600);
+  Serial.println("SIM900A Ready. Type 's' to send, 'r' to receive.");
+}
+void loop() {
+  if (Serial.available()) {
+    char cmd = Serial.read();
+    if (cmd == 's') sendMessage();
+    if (cmd == 'r') receiveMessage();
+  }
+  if (sim.available()) Serial.write(sim.read());
+}
+void sendMessage() {
+  Serial.println("Sending Message...");
+  sim.println("AT+CMGF=1");
+  delay(100);
+  sim.println("AT+CMGS=\"+917904329949\"");
+  delay(100);
+  sim.println("Good morning!");
+  sim.write(26);
+  Serial.println("Message Sent!");
+}
+void receiveMessage() {
+  sim.println("AT+CNMI=2,2,0,0,0");
+  Serial.println("Waiting for messages...");
+}
+
+1.b) Bluetooth
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial(3, 2);
+
+void setup() {
+  Serial.begin(9600);
+  mySerial.begin(9600);
+  Serial.println("Initializing...");
+  Serial.println("The device started, now you can pair it with Bluetooth!");
+}
+
+void loop() {
+  if (Serial.available()) {
+    mySerial.write(Serial.read());
+  }
+  if (mySerial.available()) {
+    Serial.write(mySerial.read());
+  }
+  delay(20);
+}
+
+2.IR Sensor 
+int ir=9;
+int led=13;
+void setup(){
+  pinMode(ir,INPUT);
+  pinMode(led,OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Serial Working");
+}
+void loop(){
+  int sensor=digitalRead(ir);
+  if(sensor==1){
+    digitalWrite(led,LOW);
+    Serial.println("Motion ended");
+  }else{
+    digitalWrite(led,HIGH);
+    Serial.println("Motion Detected!");
+  }
+}
+
+3. RaspberryPi 
+import RPi.GPIO as GPIO
+import time
+
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
+
+def RCtime(RCpin):
+    reading = 0
+    GPIO.setup(RCpin, GPIO.OUT)
+    GPIO.output(RCpin, GPIO.LOW)
+    time.sleep(2)  
+
+    GPIO.setup(RCpin, GPIO.IN)
+    while GPIO.input(RCpin) == GPIO.LOW:
+        reading += 1 
+    return reading
+
+try:
+    while True:
+        print(RCtime(12))  
+        time.sleep(1)  
+except KeyboardInterrupt:
+    GPIO.cleanup()
+    print("Exiting...")
+
+Arduino code : 
+int pin=A0;
+int led=8;
+int threshold=400;
+void setup()
+{
+  pinMode(led, OUTPUT);
+  Serial.begin(9600);
+}
+void loop()
+{
+  int light=analogRead(pin);
+  Serial.print("Light Intensity : ");
+  Serial.println(light);
+  if(light<threshold){
+    digitalWrite(led,HIGH);
+  }else{
+    digitalWrite(led,LOW);
+  }
+  delay(1000);
+}
+
+4. HeartBeats sensor
+#define USE_ARDUINO_INTERRUPTS true
+#include <PulseSensorPlayground.h>
+const int PULSE_SENSOR_PIN = 0;
+const int LED_PIN = 13;
+const int THRESHOLD = 550;
+PulseSensorPlayground pulseSensor;
+void setup() {
+  Serial.begin(9600);
+  pulseSensor.analogInput(PULSE_SENSOR_PIN);
+  pulseSensor.blinkOnPulse(LED_PIN);
+  pulseSensor.setThreshold(THRESHOLD);
+
+  if (pulseSensor.begin()) {
+    Serial.println("PulseSensor initialized successfully!");
+  }
+}
+void loop() {
+  int currentBPM = pulseSensor.getBeatsPerMinute();
+
+  if (pulseSensor.sawStartOfBeat()) {
+    Serial.println("♥ Heartbeat detected!");
+    Serial.print("BPM: ");
+    Serial.println(currentBPM);
+  }
+  delay(20);
+}
+5. Temperature and Humidity sensor
+const int tempSensorPin = A0;
+const int humiditySensorPin = A1;
+int rawValue = 0;
+double voltage = 0, tempC = 0, tempF = 0;
+int humidityValue = 0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(tempSensorPin, INPUT);
+  pinMode(humiditySensorPin, INPUT);
+}
+
+void loop() {
+  rawValue = analogRead(tempSensorPin);
+  voltage = (rawValue / 1023.0) * 5000;
+  tempC = (voltage - 500) * 0.1;
+  tempF = (tempC * 1.8) + 32;
+
+  Serial.print("Temperature (C): ");
+  Serial.print(tempC, 1);
+  Serial.print(" | Temperature (F): ");
+  Serial.println(tempF, 1);
+
+  humidityValue = analogRead(humiditySensorPin);
+  int humidity = map(humidityValue, 0, 1023, 10, 70);
+
+  Serial.print("Humidity: ");
+  Serial.print(humidity);
+  Serial.println("%");
+
+  delay(5000);
+}
+
+6. Ultrasonic Sensor
+const int TRIG_PIN = 6;
+const int ECHO_PIN = 7;
+const int LED_PIN = 3;
+const int DISTANCE_THRESHOLD = 50;
+float duration_us, distance_cm;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  duration_us = pulseIn(ECHO_PIN, HIGH);
+  distance_cm = 0.017 * duration_us;
+
+  if (distance_cm < DISTANCE_THRESHOLD)
+    digitalWrite(LED_PIN, HIGH);
+  else
+    digitalWrite(LED_PIN, LOW);
+
+  Serial.print("Distance: ");
+  Serial.print(distance_cm);
+  Serial.println(" cm");
+
+  delay(500);
+}
+
+7. PIR Sensor
+const int PIR_SENSOR_OUTPUT_PIN = 4;
+int warm_up;
+
+void setup() {
+  pinMode(PIR_SENSOR_OUTPUT_PIN, INPUT);
+  Serial.begin(9600);
+  delay(20000);
+}
+
+void loop() {
+  int sensor_output = digitalRead(PIR_SENSOR_OUTPUT_PIN);
+
+  if (sensor_output == LOW) {
+    if (warm_up == 1) {
+      Serial.println("Warming Up");
+      warm_up = 0;
+      delay(2000);
+    }
+    Serial.println("No object in sight");
+    delay(1000);
+  } else {
+    Serial.println("Object detected");
+    warm_up = 1;
+    delay(1000);
+  }
+}
+
+8. Smoke detection
+const int smokeSensorPin = A0;
+const int buzzerPin = 9;
+const int ledPin = 8;
+const int threshold = 300;
+
+void setup() {
+  pinMode(buzzerPin, OUTPUT);
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int sensorValue = analogRead(smokeSensorPin);
+  Serial.print("Smoke Level: ");
+  Serial.println(sensorValue);
+
+  if (sensorValue > threshold) {
+    digitalWrite(buzzerPin, HIGH);
+    digitalWrite(ledPin, HIGH);
+    Serial.println("WARNING: Smoke Detected!");
+  } else {
+    digitalWrite(buzzerPin, LOW);
+    digitalWrite(ledPin, LOW);
+  }
+  delay(1000);
+}
+
