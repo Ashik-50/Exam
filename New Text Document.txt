@@ -119,32 +119,17 @@ void loop()
 }
 
 4. HeartBeats sensor
-#define USE_ARDUINO_INTERRUPTS true
-#include <PulseSensorPlayground.h>
-const int PULSE_SENSOR_PIN = 0;
-const int LED_PIN = 13;
-const int THRESHOLD = 550;
-PulseSensorPlayground pulseSensor;
+#define PULSE_SENSOR A0 
 void setup() {
-  Serial.begin(9600);
-  pulseSensor.analogInput(PULSE_SENSOR_PIN);
-  pulseSensor.blinkOnPulse(LED_PIN);
-  pulseSensor.setThreshold(THRESHOLD);
-
-  if (pulseSensor.begin()) {
-    Serial.println("PulseSensor initialized successfully!");
-  }
+    Serial.begin(9600);
 }
 void loop() {
-  int currentBPM = pulseSensor.getBeatsPerMinute();
-
-  if (pulseSensor.sawStartOfBeat()) {
-    Serial.println("♥ Heartbeat detected!");
-    Serial.print("BPM: ");
-    Serial.println(currentBPM);
-  }
-  delay(20);
+    int pulseValue = analogRead(PULSE_SENSOR);
+    Serial.print("Pulse Sensor Value: ");
+    Serial.println(pulseValue);
+    delay(10);
 }
+
 5. Temperature and Humidity sensor
 const int tempSensorPin = A0;
 const int humiditySensorPin = A1;
